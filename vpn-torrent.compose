@@ -1,0 +1,53 @@
+version: '3.4'
+
+services:
+    vpn:
+        image: dperson/openvpn-client
+        cap_add:
+          - net_admin
+        environment:
+          TZ: 'EST5EDT'
+        networks:
+          - default
+        read_only: true
+        tmpfs:
+          - /tmp
+        restart: unless-stopped
+        security_opt:
+          - label:disable
+        stdin_open: true
+        tty: true
+        volumes:
+          - /dev/net:/dev/net:z
+          - /mnt/data/openvpn/:/vpn/
+
+    torrent:
+        image: linuxserver/qbittorrent
+        depends_on:
+          - vpn
+        network_mode: "service:vpn"
+        restart: unless-stopped
+        stdin_open: true
+        tty: true
+        volumes:
+          - /mnt/data/qbittorent/:/config
+          - /mnt/:/mnt/
+    web:
+        image: dperson/nginx
+        depends_on:
+          - torrent
+        links:
+          - vpn:torrent
+        networks:
+          - default
+        ports:
+          - "9005:80"
+        read_only: true
+        tmpfs:
+          - /run
+          - /tmp
+          - /var/cache/nginx
+        restart: unless-stopped
+        stdin_open: true
+        tty: true
+        command: -w "http://torrent:8080/;/"
