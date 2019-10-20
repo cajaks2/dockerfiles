@@ -30,10 +30,10 @@ services:
         stdin_open: true
         tty: true
         volumes:
-          - /mnt/data/qbittorent/:/config
+          - /mnt/data/qbittorent/:/config/
           - /mnt/:/mnt/
     web:
-        image: dperson/nginx
+        image: nginx
         depends_on:
           - torrent
         links:
@@ -42,12 +42,12 @@ services:
           - default
         ports:
           - "9005:80"
-        read_only: true
         tmpfs:
           - /run
           - /tmp
           - /var/cache/nginx
+        volumes:
+          - /mnt/data/docker/torrent-nginx/:/etc/nginx/
         restart: unless-stopped
         stdin_open: true
         tty: true
-        command: -w "http://torrent:8080/;/"
